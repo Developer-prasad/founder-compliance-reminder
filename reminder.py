@@ -20,14 +20,8 @@ for task in tasks:
     date = datetime.strptime(task["date"], "%Y-%m-%d").date()
     diff = (date - today).days
 
-    if diff == 7:
-        send(f"Reminder: {task['title']} in 7 days")
-
-    if diff == 3:
-        send(f"Reminder: {task['title']} in 3 days")
-
-    if diff == 1:
-        send(f"Reminder: {task['title']} tomorrow")
+    if diff in [7,3,1]:
+        send(f"Reminder: {task['title']} in {diff} days")
 
     if diff == 0:
         send(f"Reminder: {task['title']} TODAY")
