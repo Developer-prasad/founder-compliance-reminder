@@ -3,6 +3,7 @@ import json
 import requests
 from datetime import datetime
 
+founders = json.loads(os.getenv("FOUNDERS_JSON"))
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
