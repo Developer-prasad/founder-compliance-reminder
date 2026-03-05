@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Founder Compliance Calendar</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f4f6fb;
+margin:0;
+padding:20px;
+}
+
+h1{
+text-align:center;
+margin-bottom:20px;
+}
+
+.tabs{
+display:flex;
+flex-wrap:wrap;
+gap:6px;
+margin-bottom:20px;
+}
+
+.tabs button{
+padding:8px 12px;
+border:none;
+background:#222;
+color:white;
+cursor:pointer;
+border-radius:4px;
+font-size:13px;
+}
+
+.tabs button.active{
+background:#007bff;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+background:white;
+box-shadow:0 4px 18px rgba(0,0,0,0.08);
+}
+
+th,td{
+padding:12px;
+border-bottom:1px solid #eee;
+text-align:left;
+}
+
+th{
+background:#111;
+color:white;
+}
+
+.deadline{
+color:#d9534f;
+font-weight:bold;
+}
+
+.prep{
+color:#f0ad4e;
+font-weight:bold;
+}
+
+.completed{
+background:#d4edda;
+}
+
+button.complete{
+background:#28a745;
+border:none;
+color:white;
+padding:5px 10px;
+cursor:pointer;
+border-radius:4px;
+}
+
+.print{
+margin-top:15px;
+padding:10px 20px;
+background:#333;
+color:white;
+border:none;
+cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>Founder Compliance Calendar</h1>
+
+<div class="tabs" id="tabs"></div>
+
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Task</th>
+<th>Type</th>
+<th>Notes</th>
+<th>Status</th>
+</tr>
+</thead>
+
+<tbody id="calendarBody"></tbody>
+
+</table>
+
+<button class="print" onclick="window.print()">Print Month</button>
+
+<script>
+
+const tasks = [
+
+{day:1,type:"Prep",name:"Update accounting & inventory",note:"Collect bills, reconcile marketplaces"},
+{day:9,type:"Prep",name:"Prepare GSTR-1 invoices",note:"Download sales reports"},
+{day:11,type:"Deadline",name:"File GSTR-1",note:"Upload sales data"},
+{day:19,type:"Prep",name:"Prepare GSTR-3B",note:"Calculate GST payable"},
+{day:20,type:"Deadline",name:"File GSTR-3B",note:"Pay GST"}
+
+]
+
+function yearlyTasks(month){
+
+let arr=[]
+
+if(month==4)
+arr.push({day:20,type:"Prep",name:"Prepare LLP Form 11",note:"Confirm partner details"})
+
+if(month==5)
+arr.push({day:30,type:"Deadline",name:"File LLP Form 11",note:"Annual return"})
+
+if(month==6)
+arr.push({day:15,type:"Prep",name:"Prepare Income Tax Return",note:"Prepare balance sheet"})
+
+if(month==7)
+arr.push({day:31,type:"Deadline",name:"File ITR-5",note:"Income tax return"})
+
+if(month==9)
+arr.push({day:20,type:"Prep",name:"Prepare LLP Form 8",note:"Financial statements"})
+
+if(month==10)
+arr.push({day:30,type:"Deadline",name:"File LLP Form 8",note:"Statement of accounts"})
+
+return arr
+
+}
+
+const startDate=new Date()
+
+const months=[]
+
+for(let i=0;i<24;i++){
+
+let d=new Date(startDate.getFullYear(),startDate.getMonth()+i)
+
+months.push({
+year:d.getFullYear(),
+month:d.getMonth()
+})
+
+}
+
+const tabs=document.getElementById("tabs")
+
+months.forEach((m,i)=>{
+
+let btn=document.createElement("button")
+
+btn.innerText=new Date(m.year,m.month).toLocaleString("default",{month:"short",year:"numeric"})
+
+btn.onclick=()=>loadMonth(i)
+
+if(i==0) btn.classList.add("active")
+
+tabs.appendChild(btn)
+
+})
+
+function loadMonth(index){
+
+document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"))
+document.querySelectorAll(".tabs button")[index].classList.add("active")
+
+let m=months[index]
+
+let body=document.getElementById("calendarBody")
+body.innerHTML=""
+
+let list=[...tasks,...yearlyTasks(m.month)]
+
+list.sort((a,b)=>a.day-b.day)
+
+list.forEach(t=>{
+
+let id=m.year+"-"+m.month+"-"+t.name
+
+let completed=localStorage.getItem(id)
+
+let tr=document.createElement("tr")
+
+if(completed) tr.classList.add("completed")
+
+tr.innerHTML=
+<td>${t.day}</td>
+<td>${t.name}</td>
+<td class="${t.type=="Deadline"?"deadline":"prep"}">${t.type}</td>
+<td>${t.note}</td>
+<td>
+<button class="complete" onclick="completeTask('${id}')">
+${completed?"Done":"Complete"}
+</button>
+</td>
+
+
+body.appendChild(tr)
+
+})
+
+}
+
+function completeTask(id){
+
+localStorage.setItem(id,true)
+
+location.reload()
+
+}
+
+loadMonth(0)
+
+</script>
+
+</body>
+</html>
