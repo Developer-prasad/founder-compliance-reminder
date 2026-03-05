@@ -6,6 +6,8 @@ from datetime import datetime
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 founders = json.loads(os.getenv("FOUNDERS_JSON"))
 
+today = datetime.utcnow().date()
+
 WELCOME_MESSAGE = """
 Welcome to the Founder Compliance Bot.
 
@@ -19,10 +21,9 @@ This bot sends important compliance reminders including:
 Please DO NOT mute this bot. Missing a compliance deadline can result in penalties.
 
 You will automatically receive reminders before important filing dates.
+
 This bot is created and maintained by @developer_prasad.
 """
-
-today = datetime.utcnow().date()
 
 
 def send(chat_id, message):
@@ -44,7 +45,7 @@ def check_new_users():
 
     res = requests.get(url).json()
 
-    updates = res["result"]
+    updates = res.get("result", [])
 
     known_names = [f["name"] for f in founders]
 
@@ -66,22 +67,56 @@ def check_new_users():
             send(chat_id, WELCOME_MESSAGE)
 
 
+# check if new founders joined
 check_new_users()
 
-with open("compliance.json") as f:
-    tasks = json.load(f)
 
+# load compliance rules
+with open("compliance.json") as f:
+    data = json.load(f)
+
+
+tasks = []
+
+
+# generate monthly tasks
+for item in data["monthly"]:
+
+    event_date = datetime(today.year, today.month, item["day"]).date()
+
+    tasks.append({
+        "title": item["title"],
+        "date": event_date.strftime("%Y-%m-%d")
+    })
+
+
+# add yearly tasks
+for item in data["yearly"]:
+    tasks.append(item)
+
+
+reminders = []
+
+
+# check reminder timing
 for task in tasks:
 
     event_date = datetime.strptime(task["date"], "%Y-%m-%d").date()
+
     diff = (event_date - today).days
 
     if diff in [7, 3, 1, 0]:
 
         if diff == 0:
-            message = f"⚠️ TODAY: {task['title']}"
+            reminders.append(f"⚠️ TODAY: {task['title']}")
         else:
-            message = f"Reminder: {task['title']} in {diff} days"
+            reminders.append(f"{task['title']} ({diff} days)")
 
-        for founder in founders:
-            send(founder["chat_id"], message)
+
+# send single grouped message
+if reminders:
+
+    message = "📌 Compliance Reminder\n\n" + "\n".join(reminders)
+
+    for founder in founders:
+        send(founder["chat_id"], message)
