@@ -22,4 +22,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run script
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          FOUNDERS_JSON: ${{ secrets.FOUNDERS_JSON }}
         run: python reminder.py
